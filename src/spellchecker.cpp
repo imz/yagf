@@ -69,7 +69,6 @@ SpellChecker::SpellChecker(QTextEdit *textEdit): m_textEdit(textEdit)
     m_map->insert("pol", "pl");
     m_map->insert("por", "pt_PT");
     m_map->insert("rum", "ro");
-    //m_map->insert("rus", "ru");
     m_map->insert("ron", "ro");
     m_map->insert("slo", "sl");
     m_map->insert("slk", "sk");
@@ -136,7 +135,7 @@ SpellChecker::~SpellChecker()
 
 void SpellChecker::setLanguage(const QString &lang)
 {
-    if (lang.isEmpty()) return;
+
     delete_aspell_speller(spell_checker1);
     delete_aspell_speller(spell_checker2);
     bad_language.clear();
@@ -169,11 +168,6 @@ void SpellChecker::setLanguage(const QString &lang)
         m_lang2 = "de_AT";
 
     }
-    if (lang == "ruseng") {
-        m_lang1 = "ru";
-        m_lang2 = "en";
-
-    }
     aspell_config_replace(spell_config1, "lang", m_lang1.toAscii());
     aspell_config_replace(spell_config2, "lang", m_lang2.toAscii());
     AspellCanHaveError *possible_err = new_aspell_speller(spell_config1);
@@ -199,7 +193,7 @@ void SpellChecker::setLanguage(const QString &lang)
 
 bool SpellChecker::spellCheck()
 {
-    if ((spell_checker1 == 0) && (spell_checker2 == 0)) {
+    if ((spell_checker1 == 0) || (spell_checker2 == 0)) {
         QPixmap icon;
         icon.load(":/warning.png");
         QMessageBox messageBox(QMessageBox::NoIcon, "YAGF", QObject::trUtf8("Required spelling dictionary (%1) is not found.\nSpell-checking is disabled.\nTry to install an appropriate aspell dictionary.").arg(bad_language),
@@ -310,12 +304,12 @@ bool SpellChecker::checkWordSpelling(const QString &word)
 
     QByteArray ba = tmp.toUtf8();
     return (aspell_speller_check(spell_checker1, ba.data(), ba.size()) != 0) ||
-           (aspell_speller_check((spell_checker2 != NULL ? spell_checker2 : spell_checker1), ba.data(), ba.size()) != 0);
+           (aspell_speller_check(spell_checker2, ba.data(), ba.size()) != 0);
 }
 
 void SpellChecker::checkWord()
 {
-    if ((spell_checker1 == 0) && (spell_checker2 == 0))
+    if ((spell_checker1 == 0) || (spell_checker2 == 0))
         return;
     QTextCursor cursor = m_textEdit->textCursor();
     _checkWord(&cursor);
